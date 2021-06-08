@@ -80,12 +80,7 @@ class playGame extends Phaser.Scene{
         this.physics.add.collider(this.player, this.platformGroup);
 
         // checking for input
-        this.input.on("pointerdown", this.jump, this);
-        let cursors;
-        cursors = this.input.keyboard.createCursorKeys();
-        if(cursors.up.isDown){
-            this.jump
-        }
+        this.cursors = this.input.keyboard.createCursorKeys();
 
         // setting cars animation
         this.anims.create({
@@ -133,6 +128,10 @@ class playGame extends Phaser.Scene{
     }
     update(){
 
+        if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
+            this.player.anims.play('turn')
+           this.jump()
+        }
         // game over
         if(this.player.y > game.config.height){
             this.scene.start("PlayGame");

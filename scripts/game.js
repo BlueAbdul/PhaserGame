@@ -126,9 +126,7 @@ class playGame extends Phaser.Scene{
             mountain.setOrigin(0.5, 1);
             mountain.body.setVelocityX(gameOptions.mountainSpeed * -1)
             this.mountainGroup.add(mountain);
-            // if(Phaser.Math.Between(0, 1)){
-                mountain.setDepth(0);
-            // }
+            mountain.setDepth(0);
             mountain.setFrame(Phaser.Math.Between(0, 3))
             this.addMountains()
         }
@@ -202,7 +200,7 @@ class playGame extends Phaser.Scene{
         this.addMountains()
         this.platformGroup.setDepth(1)
     }
-};
+}
 function resize(){
     let canvas = document.querySelector("canvas");
     let windowWidth = window.innerWidth;

@@ -2,13 +2,15 @@ let game;
 
 // global game options
 let gameOptions = {
-    platformStartSpeed: 350,
-    spawnRange: [100, 350],
-    platformSizeRange: [50, 250],
-    playerGravity: 900,
-    jumpForce: 400,
+    platformStartSpeed: 1500,
+    spawnRange: [10, 50],
+    platformSizeRange: [50, 50],
+    playerGravity: 1900,
+    jumpForce: 700,
     playerStartPosition: 200,
-    jumps: 2
+    jumps: 2,
+    renaultPercent: 5,
+    coinPercent : 100
     
 }
 
@@ -40,10 +42,21 @@ class playGame extends Phaser.Scene{
     }
     preload(){
         this.load.image("platform", "ezaplatform.png");
+        this.load.spritesheet("renault", "sprite-renault.png",{
+            frameWidth: 100,
+            frameHeight: 20
+        });
         this.load.spritesheet("player", "sprite-golf.png", {
             frameWidth: 289,
             frameHeight: 103
         });
+        this.load.spritesheet("coin", "coin.png", {
+            frameWidth: 20,
+            frameHeight: 20
+        });
+        
+
+        
         // this.load.spritesheet('player', 'golf.png', { frameWidth: 600, frameHeight: 223 });
     }
     create(){
@@ -56,6 +69,17 @@ class playGame extends Phaser.Scene{
             }
         });
 
+        this.renaultGroup = this.add.group({
+ 
+            // once a firecamp is removed, it's added to the pool
+            removeCallback: function(renault){
+                renault.scene.renaultPool.add(renault)
+            }
+        });
+
+        this.dying = false;
+
+
         // pool
         this.platformPool = this.add.group({
 
@@ -66,8 +90,39 @@ class playGame extends Phaser.Scene{
 
         });
 
+        this.renaultPool = this.add.group({
+ 
+            // once a fire is removed from the pool, it's added to the active fire group
+            removeCallback: function(renault){
+                renault.scene.renaultGroup.add(renault)
+            }
+        });
+
+        // group with all active coins.
+        this.coinGroup = this.add.group({
+
+            // once a coin is removed, it's added to the pool
+            removeCallback: function(coin){
+                coin.scene.coinPool.add(coin)
+            }
+        });
+
+        // coin pool
+        this.coinPool = this.add.group({
+
+            // once a coin is removed from the pool, it's added to the active coins group
+            removeCallback: function(coin){
+                
+            }
+        });
+
+ 
+
+
+
         // number of consecutive jumps made by the player
         this.playerJumps = 0;
+        this.score = 0;
 
         // adding a platform to the game, the arguments are platform width and x position
         this.addPlatform(game.config.width, game.config.width / 2);
@@ -75,9 +130,11 @@ class playGame extends Phaser.Scene{
         // adding the player;
         this.player = this.physics.add.sprite(gameOptions.playerStartPosition, game.config.height / 2, "player");
         this.player.setGravityY(gameOptions.playerGravity);
+        
 
         // setting collisions between the player and the platform group
-        this.physics.add.collider(this.player, this.platformGroup);
+        this.platformCollider = this.physics.add.collider(this.player, this.platformGroup);
+
 
         // checking for input
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -93,10 +150,78 @@ class playGame extends Phaser.Scene{
             repeat: -1
         });
         this.player.anims.play("rolling");
+        this.anims.create({
+            key: "warning",
+            frames: this.anims.generateFrameNumbers("renault", {
+                start: 0,
+                end: 2
+            }),
+            frameRate: 15,
+            repeat: -1
+        });
+        this.anims.create({
+            key: "rotate",
+            frames: this.anims.generateFrameNumbers("coin", {
+                start: 0,
+                end: 5
+            }),
+            frameRate: 15,
+            yoyo: true,
+            repeat: -1
+        });
+        this.player.setDepth(1)
+        this.scoreText = this.add.text(20, 0, `Score : 0 `, {
+            fontFamily: "Arial",
+            fontSize: 32,
+            color: "#ffffff"
+        });
+
+        
+        let coinCollider = this.physics.add.overlap(this.player, this.coinGroup, function(player, coin){
+                this.score += 1 
+                this.scoreText.destroy();
+                this.scoreText = this.add.text(20, 0, `Score ${this.score}`, {
+                    fontFamily: "Arial",
+                    fontSize: 32,
+                    color: "#ffffff"
+                });
+                coin.destroy();
+                if(this.score == 11){
+                    alert('gagné')
+                }
+            this.tweens.add({
+                targets: coin,
+                y: coin.y - 100,
+                alpha: 0,
+                duration: 800,
+                ease: "Cubic.easeOut",
+                callbackScope: this,
+                onComplete: function(){
+                    this.coinGroup.killAndHide(coin);
+                    this.coinGroup.remove(coin);
+                    console.log(this.score);
+
+                }
+            });
+
+        }, null, this);
+
+        this.physics.add.overlap(this.player, this.renaultGroup, function(player, renault){
+
+            this.dying = true;
+            this.player.anims.stop();
+            this.player.setFrame(2);
+            this.player.body.setVelocityY(-200);
+            this.physics.world.removeCollider(this.platformCollider);
+
+        }, null, this);
+
+        
+        
     }
 
     // the core of the script: platform are added from the pool or created on the fly
-    addPlatform(platformWidth, posX){
+    addPlatform(platformWidth, posX, posY){
         let platform;
         if(this.platformPool.getLength()){
             platform = this.platformPool.getFirst();
@@ -111,8 +236,48 @@ class playGame extends Phaser.Scene{
             platform.setVelocityX(gameOptions.platformStartSpeed * -1);
             this.platformGroup.add(platform);
         }
+        // is there a coin over the platform?
+        if(Phaser.Math.Between(1, 100) <= gameOptions.coinPercent){
+            if(this.coinPool.getLength()){
+                let coin = this.coinPool.getFirst();
+                coin.x = posX;
+                coin.y = posY - 96;
+                coin.alpha = 1;
+                coin.active = true;
+                coin.visible = true;
+                this.coinPool.remove(coin);
+            }
+            else{
+                let coin = this.physics.add.sprite(posX, game.config.height * 0.70, "coin");
+                coin.setImmovable(true);
+                coin.setVelocityX(platform.body.velocity.x);
+                coin.setDepth(2);
+      
+                this.coinGroup.add(coin);
+            }
+        }
+
+        if(Phaser.Math.Between(1, 100) <= gameOptions.renaultPercent){
+            
+            if(this.renaultPool.getLength()){
+                let renault = this.renaultPool.getFirst();
+                renault.x = posX;
+                renault.y = posY - 46;
+                renault.alpha = 1;
+                renault.active = true;
+                renault.visible = true;
+                this.renaultPool.remove(renault);
+            }
+            else{
+                let renault = this.physics.add.sprite(posX, game.config.height * 0.70, "renault");
+                renault.setVelocityX(platform.body.velocity.x);
+                renault.setSize(289, 103, true)
+                renault.setDepth(1);
+                this.renaultGroup.add(renault);
+            } }
         platform.displayWidth = posX;
         this.nextPlatformDistance = 0;
+
   
     }
 
@@ -128,15 +293,19 @@ class playGame extends Phaser.Scene{
     }
     update(){
 
+
         if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
             this.player.anims.play('turn')
            this.jump()
         }
         // game over
         if(this.player.y > game.config.height){
-            this.scene.start("PlayGame");
+
+            alert('game over')
         }
         this.player.x = gameOptions.playerStartPosition;
+
+        
 
         // recycling platforms
         let minDistance = game.config.width;

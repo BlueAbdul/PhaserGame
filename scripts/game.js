@@ -1,17 +1,19 @@
 let game;
+let sky
 
 // global game options
 let gameOptions = {
-    platformStartSpeed: 1500,
-    spawnRange: [10, 50],
-    platformSizeRange: [50, 50],
-    playerGravity: 1900,
-    jumpForce: 700,
+    platformStartSpeed: 250,
+    spawnRange: [100, 350],
+    platformSizeRange: [50, 250],
+    playerGravity: 900,
+    jumpForce: 500,
     playerStartPosition: 200,
     jumps: 2,
-    renaultPercent: 5,
+    mountainSpeed: 250,
+    renaultPercent: 25,
     coinPercent : 100
-    
+
 }
 
 window.onload = function() {
@@ -22,7 +24,7 @@ window.onload = function() {
         width: 1334,
         height: 750,
         scene: playGame,
-        backgroundColor: 0x444444,
+        backgroundColor: "#328fa8",
 
         // physics settings
         physics: {
@@ -41,25 +43,34 @@ class playGame extends Phaser.Scene{
         super("PlayGame");
     }
     preload(){
-        this.load.image("platform", "ezaplatform.png");
-        this.load.spritesheet("renault", "sprite-renault.png",{
-            frameWidth: 100,
-            frameHeight: 20
+        this.load.image('stade', 'assets/stade.jpg');
+
+        this.load.image("platform", "assets/ezaplatform.png", {
+            frameWidth: 25,
+            frameHeight: 250
         });
-        this.load.spritesheet("player", "sprite-golf.png", {
+        this.load.spritesheet("renault", "assets/sprite-renault.png",{
+            frameWidth: 280,
+            frameHeight: 103
+        });
+        this.load.spritesheet("player", "assets/sprite-golf.png", {
             frameWidth: 289,
             frameHeight: 103
         });
-        this.load.spritesheet("coin", "coin.png", {
+
+        this.load.spritesheet("mountain", "assets/mountain.png", {
+            frameWidth: 512,
+            frameHeight: 512
+        });
+        this.load.spritesheet("coin", "assets/coin.png", {
             frameWidth: 20,
             frameHeight: 20
         });
-        
 
-        
-        // this.load.spritesheet('player', 'golf.png', { frameWidth: 600, frameHeight: 223 });
     }
+
     create(){
+        this.sky = this.add.tileSprite(0,0,3000,2248,"stade")
         // group with all active platforms.
         this.platformGroup = this.add.group({
 
@@ -70,7 +81,7 @@ class playGame extends Phaser.Scene{
         });
 
         this.renaultGroup = this.add.group({
- 
+
             // once a firecamp is removed, it's added to the pool
             removeCallback: function(renault){
                 renault.scene.renaultPool.add(renault)
@@ -91,7 +102,7 @@ class playGame extends Phaser.Scene{
         });
 
         this.renaultPool = this.add.group({
- 
+
             // once a fire is removed from the pool, it's added to the active fire group
             removeCallback: function(renault){
                 renault.scene.renaultGroup.add(renault)
@@ -112,13 +123,9 @@ class playGame extends Phaser.Scene{
 
             // once a coin is removed from the pool, it's added to the active coins group
             removeCallback: function(coin){
-                
+
             }
         });
-
- 
-
-
 
         // number of consecutive jumps made by the player
         this.playerJumps = 0;
@@ -130,7 +137,7 @@ class playGame extends Phaser.Scene{
         // adding the player;
         this.player = this.physics.add.sprite(gameOptions.playerStartPosition, game.config.height / 2, "player");
         this.player.setGravityY(gameOptions.playerGravity);
-        
+
 
         // setting collisions between the player and the platform group
         this.platformCollider = this.physics.add.collider(this.player, this.platformGroup);
@@ -149,7 +156,12 @@ class playGame extends Phaser.Scene{
             frameRate: 15,
             repeat: -1
         });
+
+        // group with all active mountains.
+        this.mountainGroup = this.add.group();
+
         this.player.anims.play("rolling");
+
         this.anims.create({
             key: "warning",
             frames: this.anims.generateFrameNumbers("renault", {
@@ -176,9 +188,9 @@ class playGame extends Phaser.Scene{
             color: "#ffffff"
         });
 
-        
+
         let coinCollider = this.physics.add.overlap(this.player, this.coinGroup, function(player, coin){
-                this.score += 1 
+                this.score += 1
                 this.scoreText.destroy();
                 this.scoreText = this.add.text(20, 0, `Score ${this.score}`, {
                     fontFamily: "Arial",
@@ -216,8 +228,35 @@ class playGame extends Phaser.Scene{
 
         }, null, this);
 
-        
-        
+
+
+        // adding a mountain
+        this.addMountains()
+        this.player.setDepth(1)
+
+    }
+
+    // adding mountains
+    addMountains(){
+        let rightmostMountain = this.getRightmostMountain();
+        if(rightmostMountain < game.config.width * 2){
+            let mountain = this.physics.add.sprite(rightmostMountain + Phaser.Math.Between(100, 350), game.config.height + Phaser.Math.Between(0, 100), "mountain");
+            mountain.setOrigin(0.5, 1);
+            mountain.body.setVelocityX(gameOptions.mountainSpeed * -1)
+            this.mountainGroup.add(mountain);
+            mountain.setDepth(0);
+            mountain.setFrame(Phaser.Math.Between(0, 3))
+            this.addMountains()
+        }
+    }
+
+    // getting rightmost mountain x position
+    getRightmostMountain(){
+        let rightmostMountain = -200;
+        this.mountainGroup.getChildren().forEach(function(mountain){
+            rightmostMountain = Math.max(rightmostMountain, mountain.x);
+        })
+        return rightmostMountain;
     }
 
     // the core of the script: platform are added from the pool or created on the fly
@@ -252,13 +291,13 @@ class playGame extends Phaser.Scene{
                 coin.setImmovable(true);
                 coin.setVelocityX(platform.body.velocity.x);
                 coin.setDepth(2);
-      
+
                 this.coinGroup.add(coin);
             }
         }
 
         if(Phaser.Math.Between(1, 100) <= gameOptions.renaultPercent){
-            
+
             if(this.renaultPool.getLength()){
                 let renault = this.renaultPool.getFirst();
                 renault.x = posX;
@@ -278,7 +317,6 @@ class playGame extends Phaser.Scene{
         platform.displayWidth = posX;
         this.nextPlatformDistance = 0;
 
-  
     }
 
     // the player jumps when on the ground, or once in the air as long as there are jumps left and the first jump was on the ground
@@ -292,6 +330,7 @@ class playGame extends Phaser.Scene{
         }
     }
     update(){
+        this.sky.tilePositionX += 0.1
 
 
         if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
@@ -305,7 +344,7 @@ class playGame extends Phaser.Scene{
         }
         this.player.x = gameOptions.playerStartPosition;
 
-        
+
 
         // recycling platforms
         let minDistance = game.config.width;
@@ -323,9 +362,10 @@ class playGame extends Phaser.Scene{
             var nextPlatformWidth = Phaser.Math.Between(gameOptions.platformSizeRange[0], gameOptions.platformSizeRange[1]);
             this.addPlatform(nextPlatformWidth, game.config.width + nextPlatformWidth / 2);
         }
-
+        this.addMountains()
+        this.platformGroup.setDepth(1)
     }
-};
+}
 function resize(){
     let canvas = document.querySelector("canvas");
     let windowWidth = window.innerWidth;

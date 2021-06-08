@@ -1,4 +1,5 @@
 let game;
+let sky
 
 // global game options
 let gameOptions = {
@@ -8,8 +9,8 @@ let gameOptions = {
     playerGravity: 900,
     jumpForce: 400,
     playerStartPosition: 200,
-    jumps: 2
-    
+    jumps: 2,
+    mountainSpeed: 250,
 }
 
 window.onload = function() {
@@ -20,7 +21,7 @@ window.onload = function() {
         width: 1334,
         height: 750,
         scene: playGame,
-        backgroundColor: 0x444444,
+        backgroundColor: "#328fa8",
 
         // physics settings
         physics: {
@@ -39,14 +40,23 @@ class playGame extends Phaser.Scene{
         super("PlayGame");
     }
     preload(){
-        this.load.image("platform", "ezaplatform.png");
-        this.load.spritesheet("player", "sprite-golf.png", {
+        this.load.image('stade', 'assets/stade.jpg');
+        this.load.image("platform", "assets/ezaplatform.png", {
+            frameWidth: 25,
+            frameHeight: 250
+        });
+        this.load.spritesheet("player", "assets/sprite-golf.png", {
             frameWidth: 289,
             frameHeight: 103
         });
-        // this.load.spritesheet('player', 'golf.png', { frameWidth: 600, frameHeight: 223 });
+
+        this.load.spritesheet("mountain", "assets/mountain.png", {
+            frameWidth: 512,
+            frameHeight: 512
+        });
     }
     create(){
+        this.sky = this.add.tileSprite(0,0,3000,2248,"stade")
         // group with all active platforms.
         this.platformGroup = this.add.group({
 
@@ -83,7 +93,7 @@ class playGame extends Phaser.Scene{
         this.input.on("pointerdown", this.jump, this);
         let cursors;
         cursors = this.input.keyboard.createCursorKeys();
-        if(cursors.up.isDown){
+        if(cursors.space.isDown){
             this.jump
         }
 
@@ -97,7 +107,40 @@ class playGame extends Phaser.Scene{
             frameRate: 15,
             repeat: -1
         });
+
+        // group with all active mountains.
+        this.mountainGroup = this.add.group();
+
         this.player.anims.play("rolling");
+        // adding a mountain
+        this.addMountains()
+        this.player.setDepth(1)
+
+    }
+
+    // adding mountains
+    addMountains(){
+        let rightmostMountain = this.getRightmostMountain();
+        if(rightmostMountain < game.config.width * 2){
+            let mountain = this.physics.add.sprite(rightmostMountain + Phaser.Math.Between(100, 350), game.config.height + Phaser.Math.Between(0, 100), "mountain");
+            mountain.setOrigin(0.5, 1);
+            mountain.body.setVelocityX(gameOptions.mountainSpeed * -1)
+            this.mountainGroup.add(mountain);
+            // if(Phaser.Math.Between(0, 1)){
+                mountain.setDepth(0);
+            // }
+            mountain.setFrame(Phaser.Math.Between(0, 3))
+            this.addMountains()
+        }
+    }
+
+    // getting rightmost mountain x position
+    getRightmostMountain(){
+        let rightmostMountain = -200;
+        this.mountainGroup.getChildren().forEach(function(mountain){
+            rightmostMountain = Math.max(rightmostMountain, mountain.x);
+        })
+        return rightmostMountain;
     }
 
     // the core of the script: platform are added from the pool or created on the fly
@@ -132,6 +175,7 @@ class playGame extends Phaser.Scene{
         }
     }
     update(){
+        this.sky.tilePositionX += 0.1
 
         // game over
         if(this.player.y > game.config.height){
@@ -155,7 +199,8 @@ class playGame extends Phaser.Scene{
             var nextPlatformWidth = Phaser.Math.Between(gameOptions.platformSizeRange[0], gameOptions.platformSizeRange[1]);
             this.addPlatform(nextPlatformWidth, game.config.width + nextPlatformWidth / 2);
         }
-
+        this.addMountains()
+        this.platformGroup.setDepth(1)
     }
 };
 function resize(){

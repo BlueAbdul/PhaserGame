@@ -40,10 +40,13 @@ class playGame extends Phaser.Scene{
     }
     preload(){
         this.load.image("platform", "ezaplatform.png");
-        this.load.image("player", 'golf.png', { frameWidth: 133, frameHeight: 109 });
+        this.load.spritesheet("player", "sprite-golf.png", {
+            frameWidth: 289,
+            frameHeight: 103
+        });
+        // this.load.spritesheet('player', 'golf.png', { frameWidth: 600, frameHeight: 223 });
     }
     create(){
-
         // group with all active platforms.
         this.platformGroup = this.add.group({
 
@@ -60,7 +63,9 @@ class playGame extends Phaser.Scene{
             removeCallback: function(platform){
                 platform.scene.platformGroup.add(platform)
             }
+
         });
+
         // number of consecutive jumps made by the player
         this.playerJumps = 0;
 
@@ -81,6 +86,18 @@ class playGame extends Phaser.Scene{
         if(cursors.up.isDown){
             this.jump
         }
+
+        // setting cars animation
+        this.anims.create({
+            key: "rolling",
+            frames: this.anims.generateFrameNumbers("player", {
+                start: 0,
+                end: 2
+            }),
+            frameRate: 15,
+            repeat: -1
+        });
+        this.player.anims.play("rolling");
     }
 
     // the core of the script: platform are added from the pool or created on the fly
@@ -138,6 +155,7 @@ class playGame extends Phaser.Scene{
             var nextPlatformWidth = Phaser.Math.Between(gameOptions.platformSizeRange[0], gameOptions.platformSizeRange[1]);
             this.addPlatform(nextPlatformWidth, game.config.width + nextPlatformWidth / 2);
         }
+
     }
 };
 function resize(){

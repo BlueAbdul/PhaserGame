@@ -49,8 +49,8 @@ class playGame extends Phaser.Scene{
             frameHeight: 250
         });
         this.load.spritesheet("cartonRouge", "assets/cartonRouge.png",{
-            frameWidth: 75,
-            frameHeight: 100
+            frameWidth: 36,
+            frameHeight: 46
         });
         this.load.spritesheet("player", "assets/sprite-golf.png", {
             frameWidth: 289,

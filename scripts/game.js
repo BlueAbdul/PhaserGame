@@ -13,7 +13,7 @@ let gameOptions = {
     jumps: 50,
     mountainSpeed: 250,
     cartonRougePercent: 25,
-    ballPercent : 50
+    ballPercent : 80
 }
 
 window.onload = function() {
@@ -213,7 +213,6 @@ class playGame extends Phaser.Scene{
 
                 ball.destroy();
                 if(this.score === 11){
-                    alert('gagné')
                     this.scene.start('GameWin');
 
                 }
@@ -331,7 +330,7 @@ class playGame extends Phaser.Scene{
                 else{
                     let cartonRouge = this.physics.add.sprite(posX, game.config.height * 0.70, "cartonRouge");
                     cartonRouge.setVelocityX(platform.body.velocity.x);
-                    cartonRouge.setSize(289, 103, true)
+                    cartonRouge.setSize(75,100, true)
                     cartonRouge.setDepth(1);
                     this.cartonRougeGroup.add(cartonRouge);
                 } }

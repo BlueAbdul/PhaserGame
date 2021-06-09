@@ -1,5 +1,6 @@
 let game;
 let sky
+let video
 
 // global game options
 let gameOptions = {
@@ -8,9 +9,8 @@ let gameOptions = {
     platformSizeRange: [50, 250],
     playerGravity: 2000,
     jumpForce: 1000,
-
     playerStartPosition: 200,
-    jumps: 50,
+    jumps: 2,
     mountainSpeed: 250,
     cartonRougePercent: 25,
     ballPercent : 50
@@ -18,23 +18,23 @@ let gameOptions = {
 
 window.onload = function() {
 
-    // object containing configuration options
-    let gameConfig = {
-        type: Phaser.AUTO,
-        width: 1334,
-        height: 750,
-        scene: [mainMenu, playGame, gameOver, gameWin],
-        backgroundColor: "#FFFFFF",
-
-        // physics settings
-        physics: {
-            default: "arcade"
+    let vid = document.getElementById("video");
+    vid.onended = function() {
+        let gameConfig = {
+            type: Phaser.AUTO,
+            width: 1334,
+            height: 750,
+            scene: [mainMenu, playGame, gameOver, gameWin],
+            backgroundColor: "#FFFFFF",
+            physics: {
+                default: "arcade"
+            }
         }
-    }
-    game = new Phaser.Game(gameConfig);
-    window.focus();
-    resize();
-    window.addEventListener("resize", resize, false);
+        game = new Phaser.Game(gameConfig);
+        window.focus();
+        resize();
+        window.addEventListener("resize", resize, false);
+    };
 }
 
 // playGame scene
@@ -43,6 +43,9 @@ class playGame extends Phaser.Scene{
         super("PlayGame");
     }
     preload(){
+        /**
+         * Load des images
+         */
         this.load.image('stade', 'assets/stade.jpg');
 
         this.load.image("platform", "assets/ezaplatform.png", {
@@ -70,7 +73,6 @@ class playGame extends Phaser.Scene{
     }
 
     create(){
-
         // background
         this.sky = this.add.tileSprite(0,0,3000,2248,"stade")
 
@@ -100,7 +102,6 @@ class playGame extends Phaser.Scene{
         });
 
         this.cartonRougePool = this.add.group({
-
             // once a fire is removed from the pool, it's added to the active fire group
             removeCallback: function(cartonRouge){
                 cartonRouge.scene.cartonRougeGroup.add(cartonRouge)
@@ -109,7 +110,6 @@ class playGame extends Phaser.Scene{
 
         // group with all active balls.
         this.ballGroup = this.add.group({
-
             // once a ball is removed, it's added to the pool
             removeCallback: function(ball){
                 ball.scene.ballPool.add(ball)
@@ -138,7 +138,6 @@ class playGame extends Phaser.Scene{
         // setting collisions between the player and the platform group
         this.platformCollider = this.physics.add.collider(this.player, this.platformGroup);
 
-
         // Checking pour l'input utilisateur
         this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -149,17 +148,7 @@ class playGame extends Phaser.Scene{
                 start: 0,
                 end: 2
             }),
-            frameRate: 15,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: "warning",
-            frames: this.anims.generateFrameNumbers("cartonRouge", {
-                start: 0,
-                end: 2
-            }),
-            frameRate: 15,
+            frameRate: 60,
             repeat: -1
         });
 
@@ -167,7 +156,7 @@ class playGame extends Phaser.Scene{
             key: "dying",
             frames: this.anims.generateFrameNumbers("player", {
                 start: 0,
-                end: 3
+                end: 2
             }),
             frameRate: 15,
             repeat: -1
@@ -240,17 +229,13 @@ class playGame extends Phaser.Scene{
             this.player.body.setVelocityY(-200);
             this.physics.world.removeCollider(this.platformCollider);
 
-        },
-            null,
-            this
-        );
+        }, null, this);
 
         // adding a mountain
         this.addMountains()
 
         // player au premier plan
         this.player.setDepth(1)
-
     }
 
     // adding mountains
@@ -331,7 +316,6 @@ class playGame extends Phaser.Scene{
                 else{
                     let cartonRouge = this.physics.add.sprite(posX, game.config.height * 0.70, "cartonRouge");
                     cartonRouge.setVelocityX(platform.body.velocity.x);
-                    cartonRouge.setSize(289, 103, true)
                     cartonRouge.setDepth(1);
                     this.cartonRougeGroup.add(cartonRouge);
                 } }
@@ -352,6 +336,7 @@ class playGame extends Phaser.Scene{
             this.playerJumps ++;
         }
     }
+
     update(){
         // mouvement background
         this.sky.tilePositionX += 0.1
@@ -394,7 +379,6 @@ class playGame extends Phaser.Scene{
         this.platformGroup.setDepth(1)
     }
 }
-
 
 //game over
 class gameOver extends Phaser.Scene{
@@ -465,18 +449,49 @@ class mainMenu extends Phaser.Scene {
         this.add.sprite(game.config.width / 2, game.config.height / 2, "logo");
         //s.rotation = 0
 
-        var textBg = this.add.image(0, 0, 'text');
-        var container = this.add.container(game.config.width / 2, game.config.height / 2, [textBg]);
+        let textBg = this.add.image(0, 0, 'text');
+        let container = this.add.container(game.config.width / 2, game.config.height / 2, [textBg]);
 
         textBg.setInteractive()
 
         textBg.once('pointerup', function() {
             this.scene.start('PlayGame');
         }, this)
-        console.log('menu');
     }
 }
 
+//intro
+class intro extends Phaser.Scene {
+    constructor() {
+        super("Intro")
+    }
+    preload() {
+        this.load.video('intro', "assets/intro.mp4");
+    }
+
+    create() {
+
+        video = this.add.video(game.config.width/2 ,game.config.height/2,'intro');
+
+        video.play(false)
+
+        video.on('play', function(video){
+            video.setInteractive()
+        }, this);
+
+        let click = 0
+        video.on('pointerup', function() {
+            click++
+            if (click%2 === 0){
+                this.scene.start('MainMenu');
+            }
+        }, this)
+
+        video.on('complete', function(video){
+            this.scene.start('MainMenu');
+        },this);
+    }
+}
 
 function resize(){
     let canvas = document.querySelector("canvas");

@@ -6,10 +6,12 @@ let gameOptions = {
     platformStartSpeed: 650, //650
     spawnRange: [100, 350],
     platformSizeRange: [50, 250],
-    playerGravity: 900,
-    jumpForce: 700,
+smith_dev
+    playerGravity: 2000,
+    jumpForce: 1000,
+
     playerStartPosition: 200,
-    jumps: 2,
+    jumps: 50,
     mountainSpeed: 250,
     cartonRougePercent: 25,
     ballPercent : 50
@@ -22,8 +24,8 @@ window.onload = function() {
         type: Phaser.AUTO,
         width: 1334,
         height: 750,
-        scene: playGame,
-        backgroundColor: "#328fa8",
+        scene: [mainMenu, playGame, gameOver, gameWin],
+        backgroundColor: "#FFFFFF",
 
         // physics settings
         physics: {
@@ -209,9 +211,12 @@ class playGame extends Phaser.Scene{
                     fontSize: 32,
                     color: "#ffffff"
                 });
+
                 ball.destroy();
                 if(this.score === 11){
                     alert('gagné')
+                    this.scene.start('GameWin');
+
                 }
             this.tweens.add({
                 targets: ball,
@@ -359,7 +364,10 @@ class playGame extends Phaser.Scene{
 
         // game over
         if(this.player.y > game.config.height){
-            alert('game over')
+
+            //alert('game over')
+            this.scene.start('GameOver');
+
         }
         this.player.x = gameOptions.playerStartPosition;
 
@@ -387,6 +395,89 @@ class playGame extends Phaser.Scene{
         this.platformGroup.setDepth(1)
     }
 }
+
+
+//game over
+class gameOver extends Phaser.Scene{
+
+    constructor(){
+        super("GameOver");
+    }
+    preload() {
+        this.load.image("sad", "assets/mbappe_game_over.jpg");
+    }
+    create() {
+        //console.log('%c GameOver ', 'background: green; color: white; display: block;');
+
+        this.add.sprite(game.config.width / 2, 200, 'sad');
+
+        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, 'Vous avez perdu - Cliquez pour revenir au menu', { font: '16px Courier', fill: '#00ff00' });
+
+        this.input.once('pointerup', function (event) {
+
+            this.scene.start('MainMenu');
+
+        }, this);
+        //console.log('perdu')
+    }
+
+};
+
+//win
+class gameWin extends Phaser.Scene{
+
+    constructor(){
+        super("GameWin");
+    }
+    preload() {
+        this.load.image("content", "assets/mbappe_content.jpg");
+    }
+    create() {
+        //console.log('%c GameOver ', 'background: green; color: white; display: block;');
+
+        this.add.sprite(game.config.width / 2, 200, 'content');
+
+        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, 'Vous avez gagné', { font: '16px Courier', fill: '#00ff00' });
+
+        this.input.once('pointerup', function (event) {
+
+            this.scene.start('MainMenu');
+
+        }, this);
+        console.log('gagné');
+        //console.log('perdu')
+    }
+
+};
+
+//menu
+class mainMenu extends Phaser.Scene {
+    constructor() {
+        super("MainMenu")
+    }
+    preload() {
+        this.load.image("coupe", "assets/ballon.jpg");
+        this.load.image("logo", "assets/UEFA_Euro_2020_logo.png");
+        this.load.image("text", "assets/text_start.png");
+    }
+    create() {
+        //var imgTop = this.add.image(0, 0, 'coupe')
+        this.add.sprite(80, 70, "coupe");
+        this.add.sprite(game.config.width / 2, game.config.height / 2, "logo");
+        //s.rotation = 0
+
+        var textBg = this.add.image(0, 0, 'text');
+        var container = this.add.container(game.config.width / 2, game.config.height / 2, [textBg]);
+
+        textBg.setInteractive()
+
+        textBg.once('pointerup', function() {
+            this.scene.start('PlayGame');
+        }, this)
+        console.log('menu');
+    }
+}
+
 
 function resize(){
     let canvas = document.querySelector("canvas");

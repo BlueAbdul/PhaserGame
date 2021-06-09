@@ -3,17 +3,18 @@ let sky
 
 // global game options
 let gameOptions = {
-    platformStartSpeed: 250,
+    platformStartSpeed: 650, //650
     spawnRange: [100, 350],
     platformSizeRange: [50, 250],
+smith_dev
     playerGravity: 2000,
     jumpForce: 1000,
+
     playerStartPosition: 200,
     jumps: 50,
     mountainSpeed: 250,
-    renaultPercent: 25,
-    coinPercent : 100
-
+    cartonRougePercent: 25,
+    ballPercent : 50
 }
 
 window.onload = function() {
@@ -49,9 +50,9 @@ class playGame extends Phaser.Scene{
             frameWidth: 25,
             frameHeight: 250
         });
-        this.load.spritesheet("renault", "assets/sprite-renault.png",{
-            frameWidth: 280,
-            frameHeight: 103
+        this.load.spritesheet("cartonRouge", "assets/cartonRouge.png",{
+            frameWidth: 75,
+            frameHeight: 100
         });
         this.load.spritesheet("player", "assets/sprite-golf.png", {
             frameWidth: 289,
@@ -62,68 +63,64 @@ class playGame extends Phaser.Scene{
             frameWidth: 512,
             frameHeight: 512
         });
-        this.load.spritesheet("coin", "assets/coin.png", {
-            frameWidth: 20,
-            frameHeight: 20
+        this.load.spritesheet("ball", "assets/ball.png", {
+            frameWidth: 36,
+            frameHeight: 35
         });
 
     }
 
     create(){
+
+        // background
         this.sky = this.add.tileSprite(0,0,3000,2248,"stade")
+
         // group with all active platforms.
         this.platformGroup = this.add.group({
-
             // once a platform is removed, it's added to the pool
             removeCallback: function(platform){
                 platform.scene.platformPool.add(platform)
             }
         });
 
-        this.renaultGroup = this.add.group({
-
+        this.cartonRougeGroup = this.add.group({
             // once a firecamp is removed, it's added to the pool
-            removeCallback: function(renault){
-                renault.scene.renaultPool.add(renault)
+            removeCallback: function(cartonRouge){
+                cartonRouge.scene.cartonRougePool.add(cartonRouge)
             }
         });
-
         this.dying = false;
 
 
         // pool
         this.platformPool = this.add.group({
-
             // once a platform is removed from the pool, it's added to the active platforms group
             removeCallback: function(platform){
                 platform.scene.platformGroup.add(platform)
             }
-
         });
 
-        this.renaultPool = this.add.group({
+        this.cartonRougePool = this.add.group({
 
             // once a fire is removed from the pool, it's added to the active fire group
-            removeCallback: function(renault){
-                renault.scene.renaultGroup.add(renault)
+            removeCallback: function(cartonRouge){
+                cartonRouge.scene.cartonRougeGroup.add(cartonRouge)
             }
         });
 
-        // group with all active coins.
-        this.coinGroup = this.add.group({
+        // group with all active balls.
+        this.ballGroup = this.add.group({
 
-            // once a coin is removed, it's added to the pool
-            removeCallback: function(coin){
-                coin.scene.coinPool.add(coin)
+            // once a ball is removed, it's added to the pool
+            removeCallback: function(ball){
+                ball.scene.ballPool.add(ball)
             }
         });
 
-        // coin pool
-        this.coinPool = this.add.group({
-
-            // once a coin is removed from the pool, it's added to the active coins group
-            removeCallback: function(coin){
-
+        // ball pool
+        this.ballPool = this.add.group({
+            // once a ball is removed from the pool, it's added to the active balls group
+            removeCallback: function(ball){
             }
         });
 
@@ -143,10 +140,10 @@ class playGame extends Phaser.Scene{
         this.platformCollider = this.physics.add.collider(this.player, this.platformGroup);
 
 
-        // checking for input
+        // Checking pour l'input utilisateur
         this.cursors = this.input.keyboard.createCursorKeys();
 
-        // setting cars animation
+        // Animations
         this.anims.create({
             key: "rolling",
             frames: this.anims.generateFrameNumbers("player", {
@@ -157,31 +154,48 @@ class playGame extends Phaser.Scene{
             repeat: -1
         });
 
-        // group with all active mountains.
-        this.mountainGroup = this.add.group();
-
-        this.player.anims.play("rolling");
-
         this.anims.create({
             key: "warning",
-            frames: this.anims.generateFrameNumbers("renault", {
+            frames: this.anims.generateFrameNumbers("cartonRouge", {
                 start: 0,
                 end: 2
             }),
             frameRate: 15,
             repeat: -1
         });
+
         this.anims.create({
-            key: "rotate",
-            frames: this.anims.generateFrameNumbers("coin", {
+            key: "dying",
+            frames: this.anims.generateFrameNumbers("player", {
                 start: 0,
-                end: 5
+                end: 3
             }),
             frameRate: 15,
-            yoyo: true,
             repeat: -1
         });
+
+        this.anims.create({
+            key: "ball",
+            frames: this.anims.generateFrameNumbers("ball", {
+                start: 0,
+                end: 10
+            }),
+            frameRate: 15,
+            repeat: -1
+        });
+
+        // group with all active mountains.
+        this.mountainGroup = this.add.group();
+
+        this.firstPlatform = false;
+
+        // animation de la voiture en continue
+        this.player.anims.play("rolling");
+
+        // player au premier plan
         this.player.setDepth(1)
+
+        // Score text
         this.scoreText = this.add.text(20, 0, `Score : 0 `, {
             fontFamily: "Arial",
             fontSize: 32,
@@ -189,7 +203,7 @@ class playGame extends Phaser.Scene{
         });
 
 
-        let coinCollider = this.physics.add.overlap(this.player, this.coinGroup, function(player, coin){
+        let ballCollider = this.physics.add.overlap(this.player, this.ballGroup, function(player, ball){
                 this.score += 1
                 this.scoreText.destroy();
                 this.scoreText = this.add.text(20, 0, `Score ${this.score}`, {
@@ -197,42 +211,45 @@ class playGame extends Phaser.Scene{
                     fontSize: 32,
                     color: "#ffffff"
                 });
-                coin.destroy();
-                if(this.score == 11){
-                    //alert('gagné')
+
+                ball.destroy();
+                if(this.score === 11){
+                    alert('gagné')
                     this.scene.start('GameWin');
+
                 }
             this.tweens.add({
-                targets: coin,
-                y: coin.y - 100,
+                targets: ball,
+                y: ball.y - 100,
                 alpha: 0,
                 duration: 800,
                 ease: "Cubic.easeOut",
                 callbackScope: this,
                 onComplete: function(){
-                    this.coinGroup.killAndHide(coin);
-                    this.coinGroup.remove(coin);
-                    console.log(this.score);
-
+                    this.ballGroup.killAndHide(ball);
+                    this.ballGroup.remove(ball);
                 }
             });
 
         }, null, this);
 
-        this.physics.add.overlap(this.player, this.renaultGroup, function(player, renault){
-
+        // collision
+        this.physics.add.overlap(this.player, this.cartonRougeGroup, function(player, cartonRouge){
             this.dying = true;
             this.player.anims.stop();
-            this.player.setFrame(2);
+            this.player.setFrame(3);
             this.player.body.setVelocityY(-200);
             this.physics.world.removeCollider(this.platformCollider);
 
-        }, null, this);
-
-
+        },
+            null,
+            this
+        );
 
         // adding a mountain
         this.addMountains()
+
+        // player au premier plan
         this.player.setDepth(1)
 
     }
@@ -268,6 +285,7 @@ class playGame extends Phaser.Scene{
             platform.x = posX;
             platform.active = true;
             platform.visible = true;
+            this.firstPlatform = true
             this.platformPool.remove(platform);
         }
         else{
@@ -276,45 +294,50 @@ class playGame extends Phaser.Scene{
             platform.setVelocityX(gameOptions.platformStartSpeed * -1);
             this.platformGroup.add(platform);
         }
-        // is there a coin over the platform?
-        if(Phaser.Math.Between(1, 100) <= gameOptions.coinPercent){
-            if(this.coinPool.getLength()){
-                let coin = this.coinPool.getFirst();
-                coin.x = posX;
-                coin.y = posY - 96;
-                coin.alpha = 1;
-                coin.active = true;
-                coin.visible = true;
-                this.coinPool.remove(coin);
-            }
-            else{
-                let coin = this.physics.add.sprite(posX, game.config.height * 0.70, "coin");
-                coin.setImmovable(true);
-                coin.setVelocityX(platform.body.velocity.x);
-                coin.setDepth(2);
 
-                this.coinGroup.add(coin);
+        if(this.firstPlatform){
+
+            if(Phaser.Math.Between(1, 100) <= gameOptions.ballPercent){
+                if(this.ballPool.getLength()){
+                    let ball = this.ballPool.getFirst();
+                    ball.x = posX;
+                    ball.y = posY - 96;
+                    ball.alpha = 1;
+                    ball.active = true;
+                    ball.visible = true;
+                    this.ballPool.remove(ball);
+                }
+                else{
+                    let ball = this.physics.add.sprite(posX, game.config.height * 0.70, "ball");
+                    ball.setImmovable(true);
+                    ball.setVelocityX(platform.body.velocity.x);
+                    ball.anims.play("ball");
+                    ball.setDepth(1);
+                    this.ballGroup.add(ball);
+                }
             }
+    
+            if(Phaser.Math.Between(1, 100) <= gameOptions.cartonRougePercent){
+    
+                if(this.cartonRougePool.getLength()){
+                    let cartonRouge = this.cartonRougePool.getFirst();
+                    cartonRouge.x = posX;
+                    cartonRouge.y = posY - 46;
+                    cartonRouge.alpha = 1;
+                    cartonRouge.active = true;
+                    cartonRouge.visible = true;
+                    cartonRouge.setDepth(1)
+                    this.cartonRougePool.remove(cartonRouge);
+                }
+                else{
+                    let cartonRouge = this.physics.add.sprite(posX, game.config.height * 0.70, "cartonRouge");
+                    cartonRouge.setVelocityX(platform.body.velocity.x);
+                    cartonRouge.setSize(289, 103, true)
+                    cartonRouge.setDepth(1);
+                    this.cartonRougeGroup.add(cartonRouge);
+                } }
         }
-
-        if(Phaser.Math.Between(1, 100) <= gameOptions.renaultPercent){
-
-            if(this.renaultPool.getLength()){
-                let renault = this.renaultPool.getFirst();
-                renault.x = posX;
-                renault.y = posY - 46;
-                renault.alpha = 1;
-                renault.active = true;
-                renault.visible = true;
-                this.renaultPool.remove(renault);
-            }
-            else{
-                let renault = this.physics.add.sprite(posX, game.config.height * 0.70, "renault");
-                renault.setVelocityX(platform.body.velocity.x);
-                renault.setSize(289, 103, true)
-                renault.setDepth(1);
-                this.renaultGroup.add(renault);
-            } }
+        // is there a ball over the platform?
         platform.displayWidth = posX;
         this.nextPlatformDistance = 0;
 
@@ -331,22 +354,22 @@ class playGame extends Phaser.Scene{
         }
     }
     update(){
+        // mouvement background
         this.sky.tilePositionX += 0.1
 
-
+        // jump spacebar
         if (Phaser.Input.Keyboard.JustDown(this.cursors.space)) {
-            this.player.anims.play('turn')
            this.jump()
         }
+
         // game over
         if(this.player.y > game.config.height){
 
             //alert('game over')
             this.scene.start('GameOver');
+
         }
         this.player.x = gameOptions.playerStartPosition;
-
-
 
         // recycling platforms
         let minDistance = game.config.width;
@@ -364,10 +387,15 @@ class playGame extends Phaser.Scene{
             var nextPlatformWidth = Phaser.Math.Between(gameOptions.platformSizeRange[0], gameOptions.platformSizeRange[1]);
             this.addPlatform(nextPlatformWidth, game.config.width + nextPlatformWidth / 2);
         }
+
+        // ajout de montagne
         this.addMountains()
+
+        // Les plateforme generer sont au premier plan
         this.platformGroup.setDepth(1)
     }
 }
+
 
 //game over
 class gameOver extends Phaser.Scene{
@@ -449,6 +477,7 @@ class mainMenu extends Phaser.Scene {
         console.log('menu');
     }
 }
+
 
 function resize(){
     let canvas = document.querySelector("canvas");

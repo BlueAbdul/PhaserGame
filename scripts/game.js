@@ -6,7 +6,6 @@ let gameOptions = {
     platformStartSpeed: 650, //650
     spawnRange: [100, 350],
     platformSizeRange: [50, 250],
-smith_dev
     playerGravity: 2000,
     jumpForce: 1000,
 

@@ -376,7 +376,7 @@ class playGame extends Phaser.Scene{
         // ajout de montagne
         this.addMountains()
 
-        // Les plateforme generer sont au premier plan
+        // Les plateformes generer sont au premier plan
         this.platformGroup.setDepth(1)
     }
 }

@@ -185,6 +185,8 @@ class playGame extends Phaser.Scene{
         // group with all active mountains.
         this.mountainGroup = this.add.group();
 
+        this.firstPlatform = false;
+
         // animation de la voiture en continue
         this.player.anims.play("rolling");
 
@@ -278,6 +280,7 @@ class playGame extends Phaser.Scene{
             platform.x = posX;
             platform.active = true;
             platform.visible = true;
+            this.firstPlatform = true
             this.platformPool.remove(platform);
         }
         else{
@@ -286,46 +289,50 @@ class playGame extends Phaser.Scene{
             platform.setVelocityX(gameOptions.platformStartSpeed * -1);
             this.platformGroup.add(platform);
         }
-        // is there a ball over the platform?
-        if(Phaser.Math.Between(1, 100) <= gameOptions.ballPercent){
-            if(this.ballPool.getLength()){
-                let ball = this.ballPool.getFirst();
-                ball.x = posX;
-                ball.y = posY - 96;
-                ball.alpha = 1;
-                ball.active = true;
-                ball.visible = true;
-                this.ballPool.remove(ball);
+
+        if(this.firstPlatform){
+
+            if(Phaser.Math.Between(1, 100) <= gameOptions.ballPercent){
+                if(this.ballPool.getLength()){
+                    let ball = this.ballPool.getFirst();
+                    ball.x = posX;
+                    ball.y = posY - 96;
+                    ball.alpha = 1;
+                    ball.active = true;
+                    ball.visible = true;
+                    this.ballPool.remove(ball);
+                }
+                else{
+                    let ball = this.physics.add.sprite(posX, game.config.height * 0.70, "ball");
+                    ball.setImmovable(true);
+                    ball.setVelocityX(platform.body.velocity.x);
+                    ball.anims.play("ball");
+                    ball.setDepth(1);
+                    this.ballGroup.add(ball);
+                }
             }
-            else{
-                let ball = this.physics.add.sprite(posX, game.config.height * 0.70, "ball");
-                ball.setImmovable(true);
-                ball.setVelocityX(platform.body.velocity.x);
-                ball.anims.play("ball");
-                ball.setDepth(1);
-                this.ballGroup.add(ball);
-            }
+    
+            if(Phaser.Math.Between(1, 100) <= gameOptions.cartonRougePercent){
+    
+                if(this.cartonRougePool.getLength()){
+                    let cartonRouge = this.cartonRougePool.getFirst();
+                    cartonRouge.x = posX;
+                    cartonRouge.y = posY - 46;
+                    cartonRouge.alpha = 1;
+                    cartonRouge.active = true;
+                    cartonRouge.visible = true;
+                    cartonRouge.setDepth(1)
+                    this.cartonRougePool.remove(cartonRouge);
+                }
+                else{
+                    let cartonRouge = this.physics.add.sprite(posX, game.config.height * 0.70, "cartonRouge");
+                    cartonRouge.setVelocityX(platform.body.velocity.x);
+                    cartonRouge.setSize(289, 103, true)
+                    cartonRouge.setDepth(1);
+                    this.cartonRougeGroup.add(cartonRouge);
+                } }
         }
-
-        if(Phaser.Math.Between(1, 100) <= gameOptions.cartonRougePercent){
-
-            if(this.cartonRougePool.getLength()){
-                let cartonRouge = this.cartonRougePool.getFirst();
-                cartonRouge.x = posX;
-                cartonRouge.y = posY - 46;
-                cartonRouge.alpha = 1;
-                cartonRouge.active = true;
-                cartonRouge.visible = true;
-                cartonRouge.setDepth(1)
-                this.cartonRougePool.remove(cartonRouge);
-            }
-            else{
-                let cartonRouge = this.physics.add.sprite(posX, game.config.height * 0.70, "cartonRouge");
-                cartonRouge.setVelocityX(platform.body.velocity.x);
-                cartonRouge.setSize(289, 103, true)
-                cartonRouge.setDepth(1);
-                this.cartonRougeGroup.add(cartonRouge);
-            } }
+        // is there a ball over the platform?
         platform.displayWidth = posX;
         this.nextPlatformDistance = 0;
 

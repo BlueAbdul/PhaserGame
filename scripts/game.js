@@ -16,26 +16,31 @@ let gameOptions = {
     ballPercent : 80
 }
 
-window.onload = function() {
-
-    // object containing configuration options
-    let gameConfig = {
-        type: Phaser.AUTO,
-        width: 1334,
-        height: 750,
-        scene: [mainMenu, playGame, gameOver, gameWin],
-        backgroundColor: "#FFFFFF",
-
-        // physics settings
-        physics: {
-            default: "arcade"
+let vid = document.getElementById("myVideo");
+vid.onended = function() {
+   
+    vid.parentNode.removeChild(vid);
+    
+        // object containing configuration options
+        let gameConfig = {
+            type: Phaser.AUTO,
+            width: 1334,
+            height: 750,
+            scene: [mainMenu, playGame, gameOver, gameWin],
+            backgroundColor: "#FFFFFF",
+    
+            // physics settings
+            physics: {
+                default: "arcade"
+            }
         }
-    }
-    game = new Phaser.Game(gameConfig);
-    window.focus();
-    resize();
-    window.addEventListener("resize", resize, false);
-}
+        game = new Phaser.Game(gameConfig);
+        window.focus();
+        resize();
+        window.addEventListener("resize", resize, false);
+    
+};
+
 
 // playGame scene
 class playGame extends Phaser.Scene{
@@ -213,6 +218,7 @@ class playGame extends Phaser.Scene{
 
                 ball.destroy();
                 if(this.score === 11){
+                    localStorage.setItem('score', this.score);
                     this.scene.start('GameWin');
 
                 }
@@ -364,6 +370,7 @@ class playGame extends Phaser.Scene{
         if(this.player.y > game.config.height){
 
             //alert('game over')
+            localStorage.setItem('score', this.score);
             this.scene.start('GameOver');
 
         }
@@ -409,7 +416,9 @@ class gameOver extends Phaser.Scene{
 
         this.add.sprite(game.config.width / 2, 200, 'sad');
 
-        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, 'Vous avez perdu - Cliquez pour revenir au menu', { font: '16px Courier', fill: '#00ff00' });
+        
+        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, `Vous avez perdu - Votre score : ${localStorage.getItem('score')} - Cliquez pour revenir au menu `, { font: '16px Courier', fill: '#00ff00' });
+       
 
         this.input.once('pointerup', function (event) {
 

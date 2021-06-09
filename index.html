@@ -15,10 +15,30 @@
                 left: 50%;
                 transform: translate(-50%, -50%);
             }
+            video{
+                position: absolute;
+                margin: auto;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: auto;
+                margin-bottom: auto;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                text-align: center;
+            }
+            body{
+                background: url('./assets/wallpaper.jpg');
+            }
         </style>
         <script src = "scripts/phaser.min.js"></script>
-        <script src = "scripts/game.js"></script>
     </head>
 	<body>
+        <video id="myVideo" width="1280" height="720" controls>
+            <source src="./assets/mbappeVW.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+        </video>
+        <script src = "scripts/game.js"></script>
 	</body>
 </html>

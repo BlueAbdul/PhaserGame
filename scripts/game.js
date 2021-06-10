@@ -24,8 +24,8 @@ vid.onended = function() {
         // object containing configuration options
         let gameConfig = {
             type: Phaser.AUTO,
-            width: 1334,
-            height: 750,
+            width: 1280,
+            height: 720,
             scene: [mainMenu, playGame, gameOver, gameWin],
             backgroundColor: "#FFFFFF",
     
@@ -274,7 +274,7 @@ class playGame extends Phaser.Scene{
 
     // getting rightmost mountain x position
     getRightmostMountain(){
-        let rightmostMountain = -200;
+        let rightmostMountain = -275;
         this.mountainGroup.getChildren().forEach(function(mountain){
             rightmostMountain = Math.max(rightmostMountain, mountain.x);
         })

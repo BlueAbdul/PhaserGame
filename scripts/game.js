@@ -8,9 +8,8 @@ let gameOptions = {
     platformSizeRange: [50, 250],
     playerGravity: 2000,
     jumpForce: 1000,
-
     playerStartPosition: 200,
-    jumps: 50,
+    jumps: 5,
     mountainSpeed: 250,
     cartonRougePercent: 25,
     ballPercent : 80
@@ -24,8 +23,8 @@ vid.onended = function() {
         // object containing configuration options
         let gameConfig = {
             type: Phaser.AUTO,
-            width: 1334,
-            height: 750,
+            width: 1280,
+            height: 720,
             scene: [mainMenu, playGame, gameOver, gameWin],
             backgroundColor: "#FFFFFF",
     
@@ -417,7 +416,7 @@ class gameOver extends Phaser.Scene{
         this.add.sprite(game.config.width / 2, 200, 'sad');
 
         
-        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, `Vous avez perdu - Votre score : ${localStorage.getItem('score')} - Cliquez pour revenir au menu `, { font: '16px Courier', fill: '#00ff00' });
+        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 250, `Vous avez perdu - Votre score : ${localStorage.getItem('score')} - Cliquez pour revenir au menu `, { font: '16px Courier', fill: '#00ff00' });
        
 
         this.input.once('pointerup', function (event) {
@@ -444,7 +443,7 @@ class gameWin extends Phaser.Scene{
 
         this.add.sprite(game.config.width / 2, 200, 'content');
 
-        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 150, 'Vous avez gagné', { font: '16px Courier', fill: '#00ff00' });
+        this.add.text(game.config.width / 2 - 200, game.config.height / 2 + 250, 'Vous avez gagné', { font: '16px Courier', fill: '#00ff00' });
 
         this.input.once('pointerup', function (event) {
 
@@ -488,8 +487,8 @@ class mainMenu extends Phaser.Scene {
 
 function resize(){
     let canvas = document.querySelector("canvas");
-    let windowWidth = window.innerWidth;
-    let windowHeight = window.innerHeight;
+    let windowWidth = 1280;
+    let windowHeight = 720;
     let windowRatio = windowWidth / windowHeight;
     let gameRatio = game.config.width / game.config.height;
     if(windowRatio < gameRatio){

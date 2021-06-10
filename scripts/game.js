@@ -262,7 +262,7 @@ class playGame extends Phaser.Scene{
     addMountains(){
         let rightmostMountain = this.getRightmostMountain();
         if(rightmostMountain < game.config.width * 2){
-            let mountain = this.physics.add.sprite(rightmostMountain + Phaser.Math.Between(100, 350), game.config.height + Phaser.Math.Between(0, 100), "mountain");
+            let mountain = this.physics.add.sprite(rightmostMountain + Phaser.Math.Between(550, 600), game.config.height, "mountain");
             mountain.setOrigin(0.5, 1);
             mountain.body.setVelocityX(gameOptions.mountainSpeed * -1)
             this.mountainGroup.add(mountain);
